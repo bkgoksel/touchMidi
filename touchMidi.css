@@ -1,0 +1,70 @@
+html, body {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+#padArea {
+  position: fixed;
+  width: calc(100% - 200px);
+  height: 100%;
+  left: 0;
+  top: 0;
+  background: black;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.padSurfaceArea {
+  width: 100%;
+  height: 100%;
+}
+
+#twConfig {
+  position: fixed;
+  width: 200px;
+  height: 100%;
+  right: 0;
+  top: 0;
+  background: red;
+  overflow: hidden;
+}
+
+.dropdown {
+  margin-bottom: 10px;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 160px;
+  z-index: 1;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-content button {
+  background: white;
+  border: none;
+}
+
+.dropdown-content button.active {
+  background: black;
+  color: white;
+  border: none;
+}
+
+.touchPoint {
+  background-image: -webkit-radial-gradient(circle, white, black);
+  border-radius: 50%;
+  pointer-events: none;
+  width: 50px;
+  height: 50px;
+}
+
+#scaleArea label {
+  display: block;
+}

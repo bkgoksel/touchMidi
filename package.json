@@ -1,0 +1,19 @@
+{
+  "name": "touchmidi",
+  "version": "0.1.0",
+  "description": "Enables creation of browser based MIDI control interface",
+  "main": "touchmidi.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "midi",
+    "music",
+    "touch"
+  ],
+  "author": "bkgoksel",
+  "license": "ISC",
+  "dependencies": {
+    "webmidi": "^2.0.0-rc.4"
+  }
+}
