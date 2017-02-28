@@ -109,12 +109,16 @@ class Surface{
   }
 
   resetSend(axis, type) {
+    let params = this._pad._tw._getDefaultSendParams(type);
     if (axis === "x") {
-      this._xSend = Send.getSend(this, "x", type);
+      this._xSend = Send.getSend(this, "x", params);
+      this._xSend.updateScale($(this._domSurface).width());
     } else if (axis === "y") {
-      this._ySend = Send.getSend(this, "y", type);
+      this._ySend = Send.getSend(this, "y", params);
+      this._ySend.updateScale($(this._domSurface).height());
     } else if (axis === "z") {
-      this._zSend = Send.getSend(this, "z", type);
+      this._zSend = Send.getSend(this, "z", params);
+      this._zSend.updateScale(1);
     }
   }
 
@@ -202,6 +206,20 @@ class Send {
     this._scaleMax = maxVal;
   }
 
+  _getVal(ev) {
+    if (this._axis === "x") {
+      return ev.offsetX;
+    } else if (this._axis === "y") {
+      return ev.offsetY;
+    } else if (this._axis === "z") {
+      if (ev.hasOwnProperty('pressure')) {
+        return ev.pressure;
+      } else {
+        return 0.5;
+      }
+    }
+  }
+
   pointerdown_pre(ev) {
   }
 
@@ -231,6 +249,7 @@ class NoteSend extends Send {
     this._top_oct = params.top_oct;
     this._computeAllNotes();
     this._switch = params.switch;
+    this._lastNotes = {};
   }
   updateParams(params) {
     if (params.hasOwnProperty("scale")) {
@@ -284,20 +303,30 @@ class NoteSend extends Send {
   }
 
   _playNote(ev) {
-    let note = this._computeNote(ev.offsetX);
+    let note = this._computeNote(this._getVal(ev));
+    this._lastNotes[ev.pointerId] = note;
     let velocity = this._surface._config.getVel();
     let channel = this._surface._config.getChannel();
     this._surface._pad._tw.chosenOutput.playNote(note, channel, {velocity: velocity});
   }
 
   _retriggerNote(ev) {
-    this._stopNote(this._surface._pointerLastEvents[ev.pointerId]);
-    this._playNote(ev);
+    if (this._lastNotes.hasOwnProperty(ev.pointerId)) {
+      let oldNote = this._lastNotes[ev.pointerId];
+      let newNote = this._computeNote(this._getVal(ev));
+      if(oldNote !== newNote) {
+        this._surface._pad._tw.chosenOutput.stopNote(oldNote, this._surface._config.getChannel());
+        let velocity = this._surface._config.getVel();
+        let channel = this._surface._config.getChannel();
+        this._surface._pad._tw.chosenOutput.playNote(newNote, channel, {velocity: velocity});
+        this._lastNotes[ev.pointerId] = newNote;
+      }
+    }
   }
 
   _bendNote(ev) {
-    let oldNote = this._computeNote(this._surface._pointerRootEvents[ev.pointerId].offsetX);
-    let newNote = this._computeNote(ev.offsetX);
+    let oldNote = this._computeNote(this._getVal(this._surface._pointerRootEvents[ev.pointerId]));
+    let newNote = this._computeNote(this._getVal(ev));
     let semitoneDiff = newNote - oldNote;
     let pbRange = 64;
     let pbRate = semitoneDiff/pbRange;
@@ -305,8 +334,9 @@ class NoteSend extends Send {
   }
 
   _stopNote(ev) {
-    let note = this._computeNote(ev.offsetX);
+    let note = this._computeNote(this._getVal(ev));
     this._surface._pad._tw.chosenOutput.stopNote(note, this._surface._config.getChannel());
+    delete this._lastNotes[ev.pointerId];
   }
 }
 
@@ -314,6 +344,12 @@ class VelSend extends Send {
   constructor(surface, axis, params) {
     super(surface, axis);
     this._type = "vel";
+  }
+
+  pointerdown(ev) {
+  }
+
+  pointermove(ev) {
   }
 }
 
@@ -464,24 +500,34 @@ class TouchMidi {
     this._chosenInput = WebMidi.getInputById(id);
   }
 
-  _getDefaultSurfaceParams() {
-    return {
-      channel: 1,
-      defaultVel: 0.75,
-      x: {
+  _getDefaultSendParams(type) {
+    if (type === "note") {
+      return {
         type: "note",
         scale: this.DEFAULT_SCALES.maj,
         key: this.KEYS.C,
         bottom_oct: 2,
         top_oct: 6,
         switch: "retrigger"
-      },
-      y: {
-        type: "vel",
-      },
-      z: {
-        type: "mod",
-      }
+      };
+    } else if (type === "mod") {
+      return {
+        type: "mod"
+      };
+    } else if (type === "vel") {
+      return {
+        type: "vel"
+      };
+    }
+  }
+
+  _getDefaultSurfaceParams() {
+    return {
+      channel: 1,
+      defaultVel: 0.75,
+      x: this._getDefaultSendParams("note"),
+      y: this._getDefaultSendParams("vel"),
+      z: this._getDefaultSendParams("mod")
     }
   }
 
