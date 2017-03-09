@@ -14,13 +14,13 @@ class Scale {
 }
 
 class Pad {
-  constructor(tw, name, surface_params) {
+  constructor(tw, name, surfaceParams) {
     this._tw = tw;
     this._name = name;
     this._domAdapter = new PadDomAdapter(this);
     this._input = tw.chosenInput;
     this._output = tw.chosenOutput;
-    this._surface = new Surface(this, surface_params);
+    this._surface = new Surface(this, surfaceParams);
   }
 
   getSurfaceArea() {
@@ -94,9 +94,9 @@ class SurfaceConfig{
     //TODO: Make this better
     let sendTypes = [
       {id: "note", text: "Note"},
-      {id: "vel", text: "Velocity"},
-      {id: "mod", text: "Modulation"},
-      {id: "par", text: "Parameter"}
+      {id: "vel",  text: "Velocity"},
+      {id: "mod",  text: "Modulation"},
+      {id: "par",  text: "Parameter"}
     ];
     ['x', 'y', 'z'].forEach(function(axis) {
       let $sendArea = $('<div class="' + axis + '-config-area"></div>');
@@ -165,9 +165,9 @@ class Surface{
 
   pointerdown(ev) {
     this._numEvents++;
-    this._sends.x.pointerdown_pre(ev);
-    this._sends.y.pointerdown_pre(ev);
-    this._sends.z.pointerdown_pre(ev);
+    this._sends.x.pointerdownPre(ev);
+    this._sends.y.pointerdownPre(ev);
+    this._sends.z.pointerdownPre(ev);
 
     this._sends.x.pointerdown(ev);
     this._sends.y.pointerdown(ev);
@@ -175,9 +175,9 @@ class Surface{
   }
 
   pointermove(ev) {
-    this._sends.x.pointermove_pre(ev);
-    this._sends.y.pointermove_pre(ev);
-    this._sends.z.pointermove_pre(ev);
+    this._sends.x.pointermovePre(ev);
+    this._sends.y.pointermovePre(ev);
+    this._sends.z.pointermovePre(ev);
 
     this._sends.x.pointermove(ev);
     this._sends.y.pointermove(ev);
@@ -186,9 +186,9 @@ class Surface{
 
   pointerup(ev) {
     this._numEvents--;
-    this._sends.x.pointerup_pre(ev);
-    this._sends.y.pointerup_pre(ev);
-    this._sends.z.pointerup_pre(ev);
+    this._sends.x.pointerupPre(ev);
+    this._sends.y.pointerupPre(ev);
+    this._sends.z.pointerupPre(ev);
 
     this._sends.x.pointerup(ev);
     this._sends.y.pointerup(ev);
@@ -274,13 +274,13 @@ class Send {
     }
   }
 
-  pointerdown_pre(ev) {
+  pointerdownPre(ev) {
   }
 
-  pointermove_pre(ev) {
+  pointermovePre(ev) {
   }
 
-  pointerup_pre(ev) {
+  pointerupPre(ev) {
   }
 
   pointerdown(ev) {
@@ -320,8 +320,8 @@ class NoteSend extends Send {
     this._type = "note";
     this._scale = params.scale;
     this._key = params.key;
-    this._bottom_oct = params.bottom_oct;
-    this._top_oct = params.top_oct;
+    this._bottomOct = params.bottomOct;
+    this._topOct = params.topOct;
     this._computeAllNotes();
     this._switch = params.switch;
     this._lastNotes = {};
@@ -382,10 +382,10 @@ class NoteSend extends Send {
       {id: '9', text: '9'}
     ];
     let $bottomOctPicker = getConfigPicker('.axis=' + this._axis + '-note-bottom-oct-picker', "Choose Bottom Octave", octOpts, function(e) {
-      self.updateParams({ bottom_oct: parseInt(e.target.id) });
+      self.updateParams({ bottomOct: parseInt(e.target.id) });
     });
     let $topOctPicker = getConfigPicker('.axis=' + this._axis + '-note-top-oct-picker', "Choose Top Octave", octOpts, function(e) {
-      self.updateParams({ top_oct: parseInt(e.target.id) });
+      self.updateParams({ topOct: parseInt(e.target.id) });
     });
     $conf.append($switchPicker, [$keyPicker, $scalePicker, $bottomOctPicker, $topOctPicker]);
     return $conf;
@@ -396,12 +396,12 @@ class NoteSend extends Send {
       this._scale = this._surface._pad._tw.DEFAULT_SCALES[params.scale];
       this._computeAllNotes();
     }
-    if (params.hasOwnProperty("bottom_oct")) {
-      this._bottom_oct = params.bottom_oct;
+    if (params.hasOwnProperty("bottomOct")) {
+      this._bottomOct = params.bottomOct;
       this._computeAllNotes();
     }
-    if (params.hasOwnProperty("top_oct")) {
-      this._top_oct = params.top_oct;
+    if (params.hasOwnProperty("topOct")) {
+      this._topOct = params.topOct;
       this._computeAllNotes();
     }
     if (params.hasOwnProperty("key")) {
@@ -416,11 +416,11 @@ class NoteSend extends Send {
     }
   }
   _computeAllNotes() {
-    this._all_notes = [];
+    this._allNotes = [];
     let self = this;
-    for (var oct = this._bottom_oct; oct <= this._top_oct; oct++) {
+    for (var oct = this._bottomOct; oct <= this._topOct; oct++) {
       this._scale.notes.forEach( function(note) {
-        self._all_notes.push(oct*12 + self._key + note);
+        self._allNotes.push(oct*12 + self._key + note);
       });
     }
   }
@@ -448,7 +448,7 @@ class NoteSend extends Send {
   }
 
   _computeNote(val) {
-    return this._all_notes[Math.trunc(this._all_notes.length*val/this._scaleMax)];
+    return this._allNotes[Math.trunc(this._allNotes.length*val/this._scaleMax)];
   }
 
   _playNote(ev) {
@@ -527,13 +527,13 @@ class VelSend extends Send {
     this._type = "vel";
   }
 
-  pointerdown_pre(ev) {
+  pointerdownPre(ev) {
     if (this._enabled) {
       this._setVelocity(ev.pointerId, this._getVal(ev));
     }
   }
 
-  pointermove_pre(ev) {
+  pointermovePre(ev) {
     if (this._enabled) {
       this._setVelocity(ev.pointerId, this._getVal(ev));
     }
@@ -598,13 +598,13 @@ class ParamSend extends Send {
     }
   }
 
-  pointerdown_pre(ev) {
+  pointerdownPre(ev) {
     if(this._enabled) {
       this._sendParam(this._getVal(ev));
     }
   }
 
-  pointermove_pre(ev){
+  pointermovePre(ev){
     if(this._enabled) {
       this._sendParam(this._getVal(ev));
     }
@@ -780,8 +780,8 @@ class TouchMidi {
       return {
         type: "note", cooldown: 100, scale: this.DEFAULT_SCALES.bls,
         key: this.KEYS.C,
-        bottom_oct: 2,
-        top_oct: 6,
+        bottomOct: 2,
+        topOct: 6,
         switch: "retrigger",
         decorate: true
       };
@@ -812,18 +812,18 @@ class TouchMidi {
       defaultVel: 1,
       x: this._getDefaultSendParams("note"),
       y: this._getDefaultSendParams("vel"),
-      z: this._getDefaultSendParams("mod")
+      z: this._getDefaultSendParams("par")
     }
   }
 
-  addPad(surface_params) {
+  addPad(surfaceParams) {
     let name= "newPad" + this._pads.length;
     let defaultParams = this._getDefaultSurfaceParams();
-    let final_surface_params = Object.assign(defaultParams, surface_params);
-    final_surface_params.x = Object.assign(defaultParams.x, surface_params.x);
-    final_surface_params.y = Object.assign(defaultParams.y, surface_params.y);
-    final_surface_params.z = Object.assign(defaultParams.z, surface_params.z);
-    let pad = new Pad(this, name, final_surface_params);
+    let final_surfaceParams = Object.assign(defaultParams, surfaceParams);
+    final_surfaceParams.x = Object.assign(defaultParams.x, surfaceParams.x);
+    final_surfaceParams.y = Object.assign(defaultParams.y, surfaceParams.y);
+    final_surfaceParams.z = Object.assign(defaultParams.z, surfaceParams.z);
+    let pad = new Pad(this, name, final_surfaceParams);
     this._pads.push(pad);
     this._domAdapter.addPad(pad);
   }
