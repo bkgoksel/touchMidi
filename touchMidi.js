@@ -664,6 +664,9 @@ class DOMAdapter {
     let nChildren = children.length;
     let padSize = (1/nChildren)*100;
     children.css('width', 'calc(' + padSize + '% - 14px)');
+    this._tw._pads.forEach(function (pad) {
+      pad._surface.updateDOMSurface();
+    });
   }
 }
 
